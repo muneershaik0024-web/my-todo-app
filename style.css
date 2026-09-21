@@ -1,6 +1,9 @@
+/* Animated Gradient Background */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -10,193 +13,66 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* Dark Mode Body Styling */
+@keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Dark Mode Background Override */
 body.dark-theme {
-    background-color: #1e1e24;
+    background: linear-gradient(-45deg, #0f0c20, #15102a, #1b2845, #0f172a);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
     color: #ffffff;
 }
 
+/* Premium Glassmorphism Container */
 .todo-container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 380px;
-    transition: background-color 0.3s;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    width: 400px;
+    transition: background 0.3s, box-shadow 0.3s;
 }
 
-/* Dark Mode Container Styling */
 body.dark-theme .todo-container {
-    background: #2a2a35;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    background: rgba(30, 30, 46, 0.85);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 h2 {
     text-align: center;
-    color: #333;
+    color: #222;
+    margin-top: 0;
+    font-weight: 700;
 }
 body.dark-theme h2 {
     color: #fff;
 }
 
-.input-section {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-}
-body.dark-theme input {
-    background-color: #3b3b4f;
-    border: 1px solid #555;
-    color: white;
-}
-
-button {
-    padding: 10px 15px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-button:hover {
-    background-color: #218838;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-li {
-    background: #f9f9f9;
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-left: 5px solid #007bff;
-    cursor: pointer;
-}
-body.dark-theme li {
-    background: #3b3b4f;
-    color: white;
-}
-
-/* Date aur Time text ki style */
-.task-time {
-    font-size: 11px;
-    color: #777;
-    display: block;
-    margin-top: 4px;
-}
-body.dark-theme .task-time {
-    color: #bbb;
-}
-
-.delete-btn {
-    background-color: #dc3545;
-    padding: 5px 10px;
-    font-size: 12px;
-}
-.delete-btn:hover {
-    background-color: #c82333;
-}
-
-.completed {
-    text-decoration: line-through;
-    opacity: 0.6;
-    border-left: 5px solid #28a745;
-    background: #e2f0d9 !important;
-}
-body.dark-theme .completed {
-    background: #2d4a2d !important;
-}
-
-/* New Action Buttons */
-.theme-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: #007bff;
-}
-.theme-btn:hover {
-    background-color: #0056b3;
-}
-
-.clear-btn {
-    width: 100%;
-    background-color: #6c757d;
-    margin-top: 10px;
-}
-.clear-btn:hover {
-    background-color: #5a6268;
-}
-/* NEW: Filter Buttons Styling */
-.filter-section {
-    display: flex;
-    justify-content: space-between;
-    gap: 5px;
-    margin-bottom: 15px;
-}
-
-.filter-btn {
-    flex: 1;
-    padding: 6px 10px;
-    font-size: 13px;
-    background-color: #e4e4e7;
-    color: #333;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-body.dark-theme .filter-btn {
-    background-color: #3b3b4f;
-    color: #fff;
-}
-
-.filter-btn:hover {
-    background-color: #d4d4d8;
-}
-
-body.dark-theme .filter-btn:hover {
-    background-color: #4c4c65;
-}
-
-/* Jo filter select ho uspe alag style dikhane ke liye */
-.filter-btn.active {
-    background-color: #007bff !important;
-    color: white !important;
-    font-weight: bold;
-}
-/* NEW: Progress Dashboard Styling */
+/* Dashboard Style */
 .progress-dashboard {
-    background: #f0f7ff;
+    background: rgba(255, 255, 255, 0.5);
     padding: 12px;
-    border-radius: 6px;
+    border-radius: 12px;
     margin-bottom: 15px;
-    border: 1px solid #cfe2ff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 body.dark-theme .progress-dashboard {
-    background: #222230;
-    border: 1px solid #3b3b4f;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .progress-dashboard h4 {
     margin: 0 0 10px 0;
     font-size: 13px;
-    color: #004085;
+    color: #111;
 }
 body.dark-theme .progress-dashboard h4 {
     color: #6ea8fe;
@@ -218,24 +94,173 @@ body.dark-theme .progress-dashboard h4 {
 }
 
 .bar {
-    width: 15px;
-    background-color: #0d6efd;
-    border-radius: 3px 3px 0 0;
-    height: 0px; /* JavaScript se dynamic change hoga */
+    width: 16px;
+    background: linear-gradient(135deg, #007bff, #00d2ff);
+    border-radius: 4px 4px 0 0;
+    height: 0px;
     transition: height 0.4s ease;
+}
+
+body.dark-theme .bar {
+    background: linear-gradient(135deg, #6ea8fe, #00d2ff);
 }
 
 .day-bar span {
     font-size: 10px;
     font-weight: bold;
     margin-top: 5px;
+    color: #333;
+}
+body.dark-theme .day-bar span {
+    color: #ddd;
 }
 
 .day-bar small {
     font-size: 9px;
-    color: #6c757d;
+    color: #555;
 }
 body.dark-theme .day-bar small {
-    color: #aaa;
+    color: #bbb;
 }
 
+/* Inputs & Buttons */
+.input-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    font-size: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    outline: none;
+}
+body.dark-theme input[type="text"] {
+    background-color: rgba(50, 50, 70, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+button {
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
+}
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Filter Styling */
+.filter-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.filter-btn {
+    flex: 1;
+    padding: 8px;
+    font-size: 13px;
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #222;
+    border-radius: 6px;
+    box-shadow: none;
+}
+body.dark-theme .filter-btn {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+.filter-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+body.dark-theme .filter-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+.filter-btn.active {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    color: white !important;
+}
+
+/* List Items */
+ul {
+    list-style: none;
+    padding: 0;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+li {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid #007bff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+body.dark-theme li {
+    background: rgba(50, 50, 70, 0.6);
+    color: white;
+}
+
+.task-time {
+    font-size: 11px;
+    color: #666;
+}
+body.dark-theme .task-time {
+    color: #ccc;
+}
+
+.delete-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    padding: 6px 12px;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(220, 53, 69, 0.2);
+}
+
+.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+    border-left: 5px solid #28a745;
+    background: rgba(226, 240, 217, 0.9) !important;
+}
+body.dark-theme .completed {
+    background: rgba(45, 74, 45, 0.7) !important;
+}
+
+/* Special Floating Buttons */
+.theme-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+body.dark-theme .theme-btn {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.clear-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    margin-top: 10px;
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.2);
+}
