@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Productivity Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Theme Controls -->
+    <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
+
+    <div class="todo-container">
+        <h2>📝 My Progress Tracker</h2>
+        
+        <!-- Weekly Progress Dashboard -->
+        <div class="progress-dashboard">
+            <h4>📈 Cleared Concepts This Week:</h4>
+            <div class="weeks-bar-container">
+                <div class="day-bar"><div class="bar" id="bar-Mon"></div><span>Mon</span><small id="date-Mon"></small><small id="count-Mon">0</small></div>
+                <div class="day-bar"><div class="bar" id="bar-Tue"></div><span>Tue</span><small id="date-Tue"></small><small id="count-Tue">0</small></div>
+                <div class="day-bar"><div class="bar" id="bar-Wed"></div><span>Wed</span><small id="date-Wed"></small><small id="count-Wed">0</small></div>
+                <div class="day-bar"><div class="bar" id="bar-Thu"></div><span>Thu</span><small id="date-Thu"></small><small id="count-Thu">0</small></div>
+                <div class="day-bar"><div class="bar" id="bar-Fri"></div><span>Fri</span><small id="date-Fri"></small><small id="count-Fri">0</small></div>
+                <div class="day-bar"><div class="bar" id="bar-Sat"></div><span>Sat</span><small id="date-Sat"></small><small id="count-Sat">0</small></div>
+                <div class="day-bar"><div class="bar" id="bar-Sun"></div><span>Sun</span><small id="date-Sun"></small><small id="count-Sun">0</small></div>
+            </div>
+        </div>
+
+        <!-- Search Area -->
+        <input type="text" id="searchInput" placeholder="🔍 Search tasks..." style="margin-bottom: 15px;">
+
+        <!-- Task Input Area -->
+        <div class="input-section">
+            <input type="text" id="taskInput" placeholder="Write a new task...">
+            <button id="addBtn">Add</button>
+        </div>
+
+        <!-- Filter Buttons Area -->
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="active">Active</button>
+            <button class="filter-btn" data-filter="completed">Completed</button>
+        </div>
+
+        <!-- Tasks List -->
+        <ul id="taskList"></ul>
+
+        <!-- Clear All Button -->
+        <button id="clearAllBtn" class="clear-btn">🧹 Clear All Tasks</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
