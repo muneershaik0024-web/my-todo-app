@@ -5,7 +5,6 @@ const clearAllBtn = document.getElementById('clearAllBtn');
 const themeToggle = document.getElementById('themeToggle');
 const searchInput = document.getElementById('searchInput');
 const filterButtons = document.querySelectorAll('.filter-btn');
-const timelineHistory = document.getElementById('timelineHistory');
 let currentFilter = 'all';
 
 const dashboardDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -16,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTasks();
     updateWeekDatesUI();
     updateDashboardUI();
-    updateVerticalTimeline(); // Normal dynamic timeline load karna
     if (localStorage.getItem('darkMode') === 'enabled') {
         document.body.classList.add('dark-theme');
         themeToggle.innerText = "☀️ Light Mode";
@@ -104,51 +102,6 @@ function createTaskElement(taskObj) {
     taskList.appendChild(li);
 }
 
-// NORMAL DYNAMIC TIMELINE FUNCTION
-function updateVerticalTimeline() {
-    if (!timelineHistory) return;
-    timelineHistory.innerHTML = "";
-
-    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
-    
-    // Sirf completed tasks ko date-wise group karna
-    let groupedHistory = {};
-    tasks.forEach(task => {
-        if (task.completed) {
-            let key = task.dateKey;
-            if(!key && task.time) {
-                key = task.time.split(' at ')[0];
-            }
-            if(!key) key = "Completed Tasks";
-
-            if (!groupedHistory[key]) {
-                groupedHistory[key] = 0;
-            }
-            groupedHistory[key]++;
-        }
-    });
-
-    const dateKeys = Object.keys(groupedHistory);
-    if (dateKeys.length === 0) {
-        timelineHistory.innerHTML = `<p style="font-size: 13px; color: #777; font-style: italic;">No completed tasks yet. Clear topics to update history! 🎯</p>`;
-        return;
-    }
-
-    // Normal history log list items show karna
-    dateKeys.forEach(dateKey => {
-        const count = groupedHistory[dateKey];
-        const item = document.createElement('div');
-        item.classList.add('timeline-item');
-        
-        item.innerHTML = `
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">📅 ${dateKey}</div>
-            <div class="timeline-content">🎉 Cleared <strong>${count}</strong> concept${count > 1 ? 's' : ''}! Awesome Consistency!</div>
-        `;
-        timelineHistory.appendChild(item);
-    });
-}
-
 function updateDashboardUI() {
     let progressData = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
     let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
@@ -217,7 +170,6 @@ function toggleTaskStatusInLocal(targetId) {
     
     localStorage.setItem('tasks', JSON.stringify(tasks));
     updateDashboardUI();
-    updateVerticalTimeline(); // Live normal timeline update
     filterAndSearchTasks();
 }
 
@@ -226,7 +178,6 @@ function removeTaskFromLocal(targetId) {
     tasks = tasks.filter(task => task.id ? (task.id !== targetId) : (task.text !== targetId));
     localStorage.setItem('tasks', JSON.stringify(tasks));
     updateDashboardUI();
-    updateVerticalTimeline();
 }
 
 filterButtons.forEach(btn => {
@@ -245,7 +196,6 @@ clearAllBtn.addEventListener('click', () => {
         taskList.innerHTML = "";
         localStorage.removeItem('tasks');
         updateDashboardUI();
-        updateVerticalTimeline();
     }
 });
 
