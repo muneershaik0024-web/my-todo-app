@@ -5,7 +5,6 @@ body {
     background-size: 400% 400%;
     animation: gradientAnimation 15s ease infinite;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -36,7 +35,7 @@ body.dark-theme {
     border-radius: 16px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.18);
-    width: 400px;
+    width: 420px;
     transition: background 0.3s, box-shadow 0.3s;
 }
 
@@ -118,6 +117,7 @@ body.dark-theme .day-bar span {
 .day-bar small {
     font-size: 9px;
     color: #555;
+    margin-top: 2px;
 }
 body.dark-theme .day-bar small {
     color: #bbb;
@@ -143,6 +143,11 @@ body.dark-theme input[type="text"] {
     background-color: rgba(50, 50, 70, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
+}
+
+#searchInput {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 button {
@@ -242,7 +247,7 @@ body.dark-theme .completed {
     background: rgba(45, 74, 45, 0.7) !important;
 }
 
-/* Special Floating Buttons */
+/* Floating Buttons */
 .theme-btn {
     position: absolute;
     top: 20px;
