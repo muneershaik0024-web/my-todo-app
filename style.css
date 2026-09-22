@@ -10,6 +10,7 @@ body {
     height: 100vh;
     margin: 0;
     transition: background-color 0.3s, color 0.3s;
+    overflow: hidden; /* Main page mobile par pure page ko hilne nahi dega */
 }
 
 @keyframes gradientAnimation {
@@ -18,7 +19,6 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-/* Dark Mode Background Override */
 body.dark-theme {
     background: linear-gradient(-45deg, #0f0c20, #15102a, #1b2845, #0f172a);
     background-size: 400% 400%;
@@ -36,6 +36,7 @@ body.dark-theme {
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.18);
     width: 420px;
+    box-sizing: border-box;
     transition: background 0.3s, box-shadow 0.3s;
 }
 
@@ -55,7 +56,6 @@ body.dark-theme h2 {
     color: #fff;
 }
 
-/* Dashboard Style */
 .progress-dashboard {
     background: rgba(255, 255, 255, 0.5);
     padding: 12px;
@@ -99,7 +99,6 @@ body.dark-theme .progress-dashboard h4 {
     height: 0px;
     transition: height 0.4s ease;
 }
-
 body.dark-theme .bar {
     background: linear-gradient(135deg, #6ea8fe, #00d2ff);
 }
@@ -123,7 +122,6 @@ body.dark-theme .day-bar small {
     color: #bbb;
 }
 
-/* Inputs & Buttons */
 .input-section {
     display: flex;
     gap: 10px;
@@ -166,7 +164,6 @@ button:hover {
     box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
 }
 
-/* Filter Styling */
 .filter-section {
     display: flex;
     justify-content: space-between;
@@ -198,12 +195,14 @@ body.dark-theme .filter-btn:hover {
     color: white !important;
 }
 
-/* List Items */
+/* FIX: List Scroll and Pull-to-refresh fix */
 ul {
     list-style: none;
     padding: 0;
     max-height: 250px;
     overflow-y: auto;
+    touch-action: pan-y; /* Mobile par automatic pull refresh ko block karega list scroll par */
+    -webkit-overflow-scrolling: touch; /* iOS smooth scrolling support */
 }
 
 li {
@@ -247,7 +246,6 @@ body.dark-theme .completed {
     background: rgba(45, 74, 45, 0.7) !important;
 }
 
-/* Floating Buttons */
 .theme-btn {
     position: absolute;
     top: 20px;

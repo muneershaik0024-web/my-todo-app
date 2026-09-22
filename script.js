@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTasks();
     updateWeekDatesUI();
     updateDashboardUI();
+    
+    // FIX 2: Mobile vertical browser pull-to-refresh pull up block logic
+    taskList.addEventListener('touchmove', function(e) {
+        if (taskList.scrollTop > 0 && taskList.scrollTop < (taskList.scrollHeight - taskList.clientHeight)) {
+            e.stopPropagation(); // List ke andar rehne par touch page level par nahi jayega
+        }
+    }, { passive: true });
+
     if (localStorage.getItem('darkMode') === 'enabled') {
         document.body.classList.add('dark-theme');
         themeToggle.innerText = "☀️ Light Mode";
@@ -52,15 +60,13 @@ function addTask() {
     const taskId = Date.now().toString();
     const timeStr = `${now.getDate()} ${months[now.getMonth()]} at ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const dayCreated = daysOfWeek[now.getDay()];
-    const dateKey = `${now.getDate()} ${months[now.getMonth()]}`;
 
     const taskObj = { 
         id: taskId,
         text: taskText, 
         completed: false, 
         time: timeStr,
-        day: dayCreated,
-        dateKey: dateKey
+        day: dayCreated
     };
 
     createTaskElement(taskObj);
@@ -71,7 +77,7 @@ function addTask() {
 
 function createTaskElement(taskObj) {
     const li = document.createElement('li');
-    li.setAttribute('data-id', taskObj.id || taskObj.text);
+    li.setAttribute('data-id', taskObj.id);
     li.innerHTML = `
         <div>
             <span>${taskObj.text}</span>
@@ -85,7 +91,7 @@ function createTaskElement(taskObj) {
 
     li.addEventListener('click', function() {
         li.classList.toggle('completed');
-        toggleTaskStatusInLocal(taskObj.id || taskObj.text);
+        toggleTaskStatusInLocal(taskObj.id, taskObj.day);
     });
 
     const deleteBtn = document.createElement('button');
@@ -95,20 +101,23 @@ function createTaskElement(taskObj) {
     deleteBtn.onclick = function(e) {
         e.stopPropagation();
         taskList.removeChild(li);
-        removeTaskFromLocal(taskObj.id || taskObj.text);
+        removeTaskFromLocal(taskObj.id);
     };
 
     li.appendChild(deleteBtn);
     taskList.appendChild(li);
 }
 
+// FIX 1: DUAL CHANNEL MEMORY BACKEND ARCHITECTURE
 function updateDashboardUI() {
     let progressData = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
-    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
     
-    tasks.forEach(task => {
-        if (task.completed && progressData[task.day] !== undefined) {
-            progressData[task.day] += 1;
+    // Memory Channel 2 (Permanent Analytics Logs load karna)
+    let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
+    
+    history.forEach(log => {
+        if (progressData[log.day] !== undefined) {
+            progressData[log.day] += 1;
         }
     });
 
@@ -157,45 +166,50 @@ function loadTasks() {
     filterAndSearchTasks();
 }
 
-function toggleTaskStatusInLocal(targetId) {
+function toggleTaskStatusInLocal(targetId, day) {
     let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
+    let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
     
     tasks = tasks.map(task => {
-        const matchCondition = task.id ? (task.id === targetId) : (task.text === targetId);
-        if (matchCondition) {
+        if (task.id === targetId) {
             task.completed = !task.completed;
+            
+            if (task.completed) {
+                // Agar task complete hua toh permanent history channel mein save karein
+                history.push({ id: targetId, day: day });
+            } else {
+                // Agar unstrike kiya toh history channel se remove karein
+                history = history.filter(log => log.id !== targetId);
+            }
         }
         return task;
     });
     
     localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem('completedHistory', JSON.stringify(history));
     updateDashboardUI();
     filterAndSearchTasks();
 }
 
 function removeTaskFromLocal(targetId) {
     let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
-    tasks = tasks.filter(task => task.id ? (task.id !== targetId) : (task.text !== targetId));
+    tasks = tasks.filter(task => task.id !== targetId);
     localStorage.setItem('tasks', JSON.stringify(tasks));
+    
+    // Note: User agar specific task manual delete karega tabhi graph se minus hoga, clear-all par nahi!
+    let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
+    history = history.filter(log => log.id !== targetId);
+    localStorage.setItem('completedHistory', JSON.stringify(history));
+    
     updateDashboardUI();
 }
 
-filterButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        document.querySelector('.filter-btn.active').classList.remove('active');
-        e.target.classList.add('active');
-        currentFilter = e.target.getAttribute('data-filter');
-        filterAndSearchTasks();
-    });
-});
-
-searchInput.addEventListener('input', filterAndSearchTasks);
-
+// FIX 1 OPTIMIZATION: CLEAR BUTTON SE SIRF ACTIVE LIST UDEGI, GRAPH KA PERMANENT RECORD NAHI
 clearAllBtn.addEventListener('click', () => {
-    if (confirm("Are you sure you want to delete all tasks?")) {
+    if (confirm("Are you sure you want to clear your current tasks list? (Your weekly analytics graph will remain saved! 📈)")) {
         taskList.innerHTML = "";
-        localStorage.removeItem('tasks');
-        updateDashboardUI();
+        localStorage.removeItem('tasks'); // Current tasks saaf
+        filterAndSearchTasks();
     }
 });
 
