@@ -5,6 +5,7 @@ const clearAllBtn = document.getElementById('clearAllBtn');
 const themeToggle = document.getElementById('themeToggle');
 const searchInput = document.getElementById('searchInput');
 const filterButtons = document.querySelectorAll('.filter-btn');
+const routineCheckbox = document.getElementById('routineCheckbox');
 let currentFilter = 'all';
 
 const dashboardDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -12,14 +13,14 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 document.addEventListener('DOMContentLoaded', () => {
+    checkAndSmartRolloverTasks();
     loadTasks();
-    updateWeekDatesUI();
+    updateWeekDatesUI(); // Dates load karne ka function
     updateDashboardUI();
     
-    // FIX 2: Mobile vertical browser pull-to-refresh pull up block logic
     taskList.addEventListener('touchmove', function(e) {
         if (taskList.scrollTop > 0 && taskList.scrollTop < (taskList.scrollHeight - taskList.clientHeight)) {
-            e.stopPropagation(); // List ke andar rehne par touch page level par nahi jayega
+            e.stopPropagation();
         }
     }, { passive: true });
 
@@ -29,9 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// BULLETPROOF DYNAMIC WEEK DATES CALCULATOR
 function updateWeekDatesUI() {
     const today = new Date();
-    const currentDayIndex = today.getDay();
+    const currentDayIndex = today.getDay(); // 0 = Sun, 1 = Mon...
+    
+    // Monday se aaj ka gap nikalna
     const distanceToMonday = currentDayIndex === 0 ? -6 : 1 - currentDayIndex;
     
     const mondayDate = new Date(today);
@@ -40,13 +44,53 @@ function updateWeekDatesUI() {
     dashboardDays.forEach((day, index) => {
         const loopDate = new Date(mondayDate);
         loopDate.setDate(mondayDate.getDate() + index);
-        const dateString = `${loopDate.getDate()}/${loopDate.getMonth() + 1}`;
+        
+        // Dynamic Format: "21 Sep", "22 Sep" - Yeh hamesha 100% visible rahega!
+        const dateString = `${loopDate.getDate()} ${months[loopDate.getMonth()]}`;
         
         const dateElement = document.getElementById(`date-${day}`);
         if (dateElement) {
             dateElement.innerText = dateString;
+            // Style adjustment taaki text chhipe nahi
+            dateElement.style.display = 'block';
+            dateElement.style.fontSize = '10px';
+            dateElement.style.opacity = '0.7';
+            dateElement.style.margin = '2px 0';
         }
     });
+}
+
+function checkAndSmartRolloverTasks() {
+    const now = new Date();
+    const todayStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const lastOpenedDate = localStorage.getItem('lastOpenedDate');
+    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
+
+    if (!lastOpenedDate) {
+        localStorage.setItem('lastOpenedDate', todayStr);
+        return;
+    }
+
+    if (lastOpenedDate !== todayStr) {
+        const timeStr = `${now.getDate()} ${months[now.getMonth()]} at ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const dayCreated = daysOfWeek[now.getDay()];
+
+        const routineTasksToKeep = tasks.filter(task => task.isRoutine === true);
+
+        const freshRolledTasks = routineTasksToKeep.map(oldTask => {
+            return {
+                id: (Date.now() + Math.random()).toString(),
+                text: oldTask.text,
+                completed: false,
+                time: timeStr,
+                day: dayCreated,
+                isRoutine: true
+            };
+        });
+
+        localStorage.setItem('tasks', JSON.stringify(freshRolledTasks));
+        localStorage.setItem('lastOpenedDate', todayStr);
+    }
 }
 
 function addTask() {
@@ -66,21 +110,27 @@ function addTask() {
         text: taskText, 
         completed: false, 
         time: timeStr,
-        day: dayCreated
+        day: dayCreated,
+        isRoutine: routineCheckbox.checked
     };
 
     createTaskElement(taskObj);
     saveTaskToLocal(taskObj);
+    
     taskInput.value = "";
+    routineCheckbox.checked = false;
     filterAndSearchTasks();
 }
 
 function createTaskElement(taskObj) {
     const li = document.createElement('li');
     li.setAttribute('data-id', taskObj.id);
+    
+    const routineTag = taskObj.isRoutine ? ` <span style="font-size:10px; color:#007bff; background:rgba(0,123,255,0.1); padding:2px 5px; border-radius:4px; margin-left:5px;">🔄 Daily</span>` : '';
+    
     li.innerHTML = `
         <div>
-            <span>${taskObj.text}</span>
+            <span>${taskObj.text}${routineTag}</span>
             <span class="task-time">⏰ ${taskObj.time} (${taskObj.day})</span>
         </div>
     `;
@@ -108,11 +158,8 @@ function createTaskElement(taskObj) {
     taskList.appendChild(li);
 }
 
-// FIX 1: DUAL CHANNEL MEMORY BACKEND ARCHITECTURE
 function updateDashboardUI() {
     let progressData = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
-    
-    // Memory Channel 2 (Permanent Analytics Logs load karna)
     let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
     
     history.forEach(log => {
@@ -153,10 +200,15 @@ function filterAndSearchTasks() {
     });
 }
 
+// LOCAL STORAGE HANDLERS
 function saveTaskToLocal(taskObj) {
     let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
     tasks.push(taskObj);
     localStorage.setItem('tasks', JSON.stringify(tasks));
+    
+    const now = new Date();
+    const todayStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    localStorage.setItem('lastOpenedDate', todayStr);
 }
 
 function loadTasks() {
@@ -175,10 +227,8 @@ function toggleTaskStatusInLocal(targetId, day) {
             task.completed = !task.completed;
             
             if (task.completed) {
-                // Agar task complete hua toh permanent history channel mein save karein
                 history.push({ id: targetId, day: day });
             } else {
-                // Agar unstrike kiya toh history channel se remove karein
                 history = history.filter(log => log.id !== targetId);
             }
         }
@@ -196,7 +246,6 @@ function removeTaskFromLocal(targetId) {
     tasks = tasks.filter(task => task.id !== targetId);
     localStorage.setItem('tasks', JSON.stringify(tasks));
     
-    // Note: User agar specific task manual delete karega tabhi graph se minus hoga, clear-all par nahi!
     let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
     history = history.filter(log => log.id !== targetId);
     localStorage.setItem('completedHistory', JSON.stringify(history));
@@ -204,11 +253,10 @@ function removeTaskFromLocal(targetId) {
     updateDashboardUI();
 }
 
-// FIX 1 OPTIMIZATION: CLEAR BUTTON SE SIRF ACTIVE LIST UDEGI, GRAPH KA PERMANENT RECORD NAHI
 clearAllBtn.addEventListener('click', () => {
     if (confirm("Are you sure you want to clear your current tasks list? (Your weekly analytics graph will remain saved! 📈)")) {
         taskList.innerHTML = "";
-        localStorage.removeItem('tasks'); // Current tasks saaf
+        localStorage.removeItem('tasks');
         filterAndSearchTasks();
     }
 });
@@ -225,6 +273,3 @@ themeToggle.addEventListener('click', () => {
 });
 
 addBtn.addEventListener('click', addTask);
-taskInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addTask();
-});

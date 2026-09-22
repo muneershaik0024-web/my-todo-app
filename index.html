@@ -6,8 +6,8 @@
     <title>Advanced Productivity Tracker</title>
     <link rel="stylesheet" href="style.css">
     
-    <!-- NEW: Is line se aapka tab icon rangeen 📝 emoji ban jayega -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+    <!-- Tab Icon Feature -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://w3.org' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📝</text></svg>">
 </head>
 <body>
     <!-- Theme Controls -->
@@ -34,10 +34,16 @@
         <!-- Search Area -->
         <input type="text" id="searchInput" placeholder="🔍 Search tasks..." style="margin-bottom: 15px;">
 
-        <!-- Task Input Area -->
-        <div class="input-section">
+        <!-- Task Input Area with Routine Choice -->
+        <div class="input-section" style="margin-bottom: 5px;">
             <input type="text" id="taskInput" placeholder="Write a new task...">
             <button id="addBtn">Add</button>
+        </div>
+        
+        <!-- NEW Routine Optional Checkbox Layout -->
+        <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 20px; padding-left: 5px;">
+            <input type="checkbox" id="routineCheckbox" style="cursor: pointer; width: 15px; height: 15px;">
+            <label for="routineCheckbox" style="font-size: 12px; cursor: pointer; opacity: 0.8; font-weight: 500;">Set as Daily Routine (Repeat tomorrow 🔄)</label>
         </div>
 
         <!-- Filter Buttons Area -->
