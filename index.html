@@ -5,19 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Productivity Tracker</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Tab Icon Feature -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://w3.org' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📝</text></svg>">
 </head>
 <body>
-    <!-- Theme Controls -->
     <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
 
-    <!-- Clean Center Layout Container -->
-    <div class="todo-container">
+    <!-- 🔐 NEW: Firebase Login/Signup Auth Screen -->
+    <div id="authContainer" class="todo-container" style="margin-bottom: 20px;">
+        <h2 id="authTitle">🔐 Member Login</h2>
+        <div class="input-section" style="flex-direction: column; gap: 12px;">
+            <input type="email" id="authEmail" placeholder="Enter your Email ID...">
+            <input type="password" id="authPassword" placeholder="Create or Enter Password...">
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button id="loginBtn" style="flex: 1; background: linear-gradient(135deg, #007bff, #0056b3);">Login</button>
+                <button id="signupBtn" style="flex: 1; background: linear-gradient(135deg, #17a2b8, #117a8b);">Sign Up</button>
+            </div>
+        </div>
+        <p id="authMessage" style="font-size: 12px; text-align: center; color: red; margin-top: 10px; font-weight: 500;"></p>
+    </div>
+
+    <!-- 📊 Main App Container (Login hone tak hidden rahega) -->
+    <div id="appContainer" class="todo-container" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span id="userBadge" style="font-size: 11px; font-weight: bold; background: rgba(0,123,255,0.15); color:#007bff; padding:4px 8px; border-radius:20px;">👤 Guest</span>
+            <button id="logoutBtn" style="padding: 5px 10px; font-size: 11px; background: #dc3545;">Logout</button>
+        </div>
+        
         <h2>📝 My Progress Tracker</h2>
         
-        <!-- Weekly Progress Dashboard -->
         <div class="progress-dashboard">
             <h4>📈 Cleared Concepts This Week:</h4>
             <div class="weeks-bar-container">
@@ -31,35 +46,29 @@
             </div>
         </div>
 
-        <!-- Search Area -->
-        <input type="text" id="searchInput" placeholder="🔍 Search tasks..." style="margin-bottom: 15px;">
+        <input type="text" id="searchInput" placeholder="🔍 Search tasks...">
 
-        <!-- Task Input Area with Routine Choice -->
-        <div class="input-section" style="margin-bottom: 5px;">
+        <div class="input-section" style="margin-top: 15px; margin-bottom: 5px;">
             <input type="text" id="taskInput" placeholder="Write a new task...">
             <button id="addBtn">Add</button>
         </div>
         
-        <!-- NEW Routine Optional Checkbox Layout -->
         <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 20px; padding-left: 5px;">
             <input type="checkbox" id="routineCheckbox" style="cursor: pointer; width: 15px; height: 15px;">
             <label for="routineCheckbox" style="font-size: 12px; cursor: pointer; opacity: 0.8; font-weight: 500;">Set as Daily Routine (Repeat tomorrow 🔄)</label>
         </div>
 
-        <!-- Filter Buttons Area -->
         <div class="filter-section">
             <button class="filter-btn active" data-filter="all">All</button>
             <button class="filter-btn" data-filter="active">Active</button>
             <button class="filter-btn" data-filter="completed">Completed</button>
         </div>
 
-        <!-- Tasks List -->
         <ul id="taskList"></ul>
-
-        <!-- Clear All Button -->
         <button id="clearAllBtn" class="clear-btn">🧹 Clear All Tasks</button>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Firebase System SDK Modules -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>

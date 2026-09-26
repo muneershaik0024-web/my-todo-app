@@ -1,3 +1,32 @@
+import { initializeApp } from "https://gstatic.com";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://gstatic.com";
+import { getFirestore, doc, setDoc, getDoc } from "https://gstatic.com";
+
+// 🔥 Your authenticated Firebase parameters from screenshot
+const firebaseConfig = {
+  apiKey: "AIzaSyBqCxS1nHfYDZyhVuqiU0ty9A6FonFFHhk",
+  authDomain: "://firebaseapp.com",
+  projectId: "my-pro-tracker-82de4",
+  storageBucket: "://appspot.com",
+  messagingSenderId: "166118917060",
+  appId: "1:166118917060:web:1cc6ae4b25d6d4baa95f83"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// DOM pointers
+const authContainer = document.getElementById('authContainer');
+const appContainer = document.getElementById('appContainer');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const loginBtn = document.getElementById('loginBtn');
+const signupBtn = document.getElementById('signupBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const authMessage = document.getElementById('authMessage');
+const userBadge = document.getElementById('userBadge');
+
 const taskInput = document.getElementById('taskInput');
 const addBtn = document.getElementById('addBtn');
 const taskList = document.getElementById('taskList');
@@ -6,65 +35,105 @@ const themeToggle = document.getElementById('themeToggle');
 const searchInput = document.getElementById('searchInput');
 const filterButtons = document.querySelectorAll('.filter-btn');
 const routineCheckbox = document.getElementById('routineCheckbox');
+
+let currentUser = null;
+let userTasks = [];
+let userHistory = [];
 let currentFilter = 'all';
 
 const dashboardDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-document.addEventListener('DOMContentLoaded', () => {
-    checkAndSmartRolloverTasks();
-    loadTasks();
-    updateWeekDatesUI(); // Dates load karne ka function
-    updateDashboardUI();
-    
-    taskList.addEventListener('touchmove', function(e) {
-        if (taskList.scrollTop > 0 && taskList.scrollTop < (taskList.scrollHeight - taskList.clientHeight)) {
-            e.stopPropagation();
-        }
-    }, { passive: true });
-
-    if (localStorage.getItem('darkMode') === 'enabled') {
-        document.body.classList.add('dark-theme');
-        themeToggle.innerText = "☀️ Light Mode";
+// AUTH WATCHER STATE MONITORING
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        authContainer.style.display = 'none';
+        appContainer.style.display = 'block';
+        userBadge.innerText = `👤 ${user.email.split('@')[0]}`;
+        
+        await syncFromCloud();
+        checkAndSmartRolloverTasks();
+        updateWeekDatesUI();
+        renderTasksUI();
+        updateDashboardUI();
+    } else {
+        currentUser = null;
+        authContainer.style.display = 'block';
+        appContainer.style.display = 'none';
     }
 });
 
-// BULLETPROOF DYNAMIC WEEK DATES CALCULATOR
-function updateWeekDatesUI() {
-    const today = new Date();
-    const currentDayIndex = today.getDay(); // 0 = Sun, 1 = Mon...
-    
-    // Monday se aaj ka gap nikalna
-    const distanceToMonday = currentDayIndex === 0 ? -6 : 1 - currentDayIndex;
-    
-    const mondayDate = new Date(today);
-    mondayDate.setDate(today.getDate() + distanceToMonday);
+// SIGN UP ACTION
+signupBtn.addEventListener('click', async () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value.trim();
+    if(!email || !password) {
+        authMessage.innerText = "Please enter both Email and Password.";
+        return;
+    }
+    try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        authMessage.style.color = "green";
+        authMessage.innerText = "Account Created Successfully! Signing in...";
+    } catch (err) {
+        authMessage.style.color = "red";
+        authMessage.innerText = err.message.replace("Firebase: ", "");
+    }
+});
 
-    dashboardDays.forEach((day, index) => {
-        const loopDate = new Date(mondayDate);
-        loopDate.setDate(mondayDate.getDate() + index);
-        
-        // Dynamic Format: "21 Sep", "22 Sep" - Yeh hamesha 100% visible rahega!
-        const dateString = `${loopDate.getDate()} ${months[loopDate.getMonth()]}`;
-        
-        const dateElement = document.getElementById(`date-${day}`);
-        if (dateElement) {
-            dateElement.innerText = dateString;
-            // Style adjustment taaki text chhipe nahi
-            dateElement.style.display = 'block';
-            dateElement.style.fontSize = '10px';
-            dateElement.style.opacity = '0.7';
-            dateElement.style.margin = '2px 0';
-        }
+// LOGIN ACTION
+loginBtn.addEventListener('click', async () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value.trim();
+    if(!email || !password) {
+        authMessage.innerText = "Please enter both Email and Password.";
+        return;
+    }
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+        authMessage.style.color = "red";
+        authMessage.innerText = "Invalid credentials or user doesn't exist.";
+    }
+});
+
+// LOGOUT ACTION
+logoutBtn.addEventListener('click', () => {
+    signOut(auth).then(() => {
+        userTasks = [];
+        userHistory = [];
+        authEmail.value = "";
+        authPassword.value = "";
+        authMessage.innerText = "";
     });
+});
+
+async function syncToCloud() {
+    if (!currentUser) return;
+    await setDoc(doc(db, "users", currentUser.uid), {
+        tasks: userTasks,
+        history: userHistory,
+        lastOpenedDate: localStorage.getItem('lastOpenedDate') || ""
+    });
+}
+
+async function syncFromCloud() {
+    if (!currentUser) return;
+    const docSnap = await getDoc(doc(db, "users", currentUser.uid));
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        userTasks = data.tasks || [];
+        userHistory = data.history || [];
+        if(data.lastOpenedDate) localStorage.setItem('lastOpenedDate', data.lastOpenedDate);
+    }
 }
 
 function checkAndSmartRolloverTasks() {
     const now = new Date();
     const todayStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
     const lastOpenedDate = localStorage.getItem('lastOpenedDate');
-    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
 
     if (!lastOpenedDate) {
         localStorage.setItem('lastOpenedDate', todayStr);
@@ -75,38 +144,47 @@ function checkAndSmartRolloverTasks() {
         const timeStr = `${now.getDate()} ${months[now.getMonth()]} at ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         const dayCreated = daysOfWeek[now.getDay()];
 
-        const routineTasksToKeep = tasks.filter(task => task.isRoutine === true);
+        const routineTasksToKeep = userTasks.filter(task => task.isRoutine === true);
+        userTasks = routineTasksToKeep.map(oldTask => ({
+            id: (Date.now() + Math.random()).toString(),
+            text: oldTask.text,
+            completed: false,
+            time: timeStr,
+            day: dayCreated,
+            isRoutine: true
+        }));
 
-        const freshRolledTasks = routineTasksToKeep.map(oldTask => {
-            return {
-                id: (Date.now() + Math.random()).toString(),
-                text: oldTask.text,
-                completed: false,
-                time: timeStr,
-                day: dayCreated,
-                isRoutine: true
-            };
-        });
-
-        localStorage.setItem('tasks', JSON.stringify(freshRolledTasks));
         localStorage.setItem('lastOpenedDate', todayStr);
+        syncToCloud();
     }
+}
+
+function updateWeekDatesUI() {
+    const today = new Date();
+    const currentDayIndex = today.getDay();
+    const distanceToMonday = currentDayIndex === 0 ? -6 : 1 - currentDayIndex;
+    const mondayDate = new Date(today);
+    mondayDate.setDate(today.getDate() + distanceToMonday);
+
+    dashboardDays.forEach((day, index) => {
+        const loopDate = new Date(mondayDate);
+        loopDate.setDate(mondayDate.getDate() + index);
+        const dateString = `${loopDate.getDate()} ${months[loopDate.getMonth()]}`;
+        const dateElement = document.getElementById(`date-${day}`);
+        if (dateElement) dateElement.innerText = dateString;
+    });
 }
 
 function addTask() {
     const taskText = taskInput.value.trim();
-    if (taskText === "") {
-        alert("Please write something in the task box!");
-        return;
-    }
+    if (taskText === "") return;
 
     const now = new Date();
-    const taskId = Date.now().toString();
     const timeStr = `${now.getDate()} ${months[now.getMonth()]} at ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const dayCreated = daysOfWeek[now.getDay()];
 
     const taskObj = { 
-        id: taskId,
+        id: Date.now().toString(),
         text: taskText, 
         completed: false, 
         time: timeStr,
@@ -114,162 +192,80 @@ function addTask() {
         isRoutine: routineCheckbox.checked
     };
 
-    createTaskElement(taskObj);
-    saveTaskToLocal(taskObj);
-    
+    userTasks.push(taskObj);
     taskInput.value = "";
     routineCheckbox.checked = false;
-    filterAndSearchTasks();
+    
+    renderTasksUI();
+    syncToCloud();
 }
 
-function createTaskElement(taskObj) {
-    const li = document.createElement('li');
-    li.setAttribute('data-id', taskObj.id);
-    
-    const routineTag = taskObj.isRoutine ? ` <span style="font-size:10px; color:#007bff; background:rgba(0,123,255,0.1); padding:2px 5px; border-radius:4px; margin-left:5px;">🔄 Daily</span>` : '';
-    
-    li.innerHTML = `
-        <div>
-            <span>${taskObj.text}${routineTag}</span>
-            <span class="task-time">⏰ ${taskObj.time} (${taskObj.day})</span>
-        </div>
-    `;
+function renderTasksUI() {
+    taskList.innerHTML = "";
+    userTasks.forEach(taskObj => {
+        const li = document.createElement('li');
+        li.setAttribute('data-id', taskObj.id);
+        const routineTag = taskObj.isRoutine ? ` <span style="font-size:10px; color:#007bff; background:rgba(0,123,255,0.1); padding:2px 5px; border-radius:4px; margin-left:5px;">🔄 Daily</span>` : '';
+        
+        li.innerHTML = `
+            <div>
+                <span>${taskObj.text}${routineTag}</span>
+                <span class="task-time">⏰ ${taskObj.time} (${taskObj.day})</span>
+            </div>
+        `;
 
-    if (taskObj.completed) {
-        li.classList.add('completed');
-    }
+        if (taskObj.completed) li.classList.add('completed');
 
-    li.addEventListener('click', function() {
-        li.classList.toggle('completed');
-        toggleTaskStatusInLocal(taskObj.id, taskObj.day);
+        li.addEventListener('click', () => {
+            taskObj.completed = !taskObj.completed;
+            if (taskObj.completed) {
+                userHistory.push({ id: taskObj.id, day: taskObj.day });
+            } else {
+                userHistory = userHistory.filter(log => log.id !== taskObj.id);
+            }
+            renderTasksUI();
+            updateDashboardUI();
+            syncToCloud();
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText = "X";
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            userTasks = userTasks.filter(t => t.id !== taskObj.id);
+            userHistory = userHistory.filter(log => log.id !== taskObj.id);
+            renderTasksUI();
+            updateDashboardUI();
+            syncToCloud();
+        };
+
+        li.appendChild(deleteBtn);
+        taskList.appendChild(li);
     });
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerText = "X";
-    deleteBtn.classList.add('delete-btn');
-
-    deleteBtn.onclick = function(e) {
-        e.stopPropagation();
-        taskList.removeChild(li);
-        removeTaskFromLocal(taskObj.id);
-    };
-
-    li.appendChild(deleteBtn);
-    taskList.appendChild(li);
+    filterAndSearchTasks();
 }
 
 function updateDashboardUI() {
     let progressData = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
-    let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
-    
-    history.forEach(log => {
-        if (progressData[log.day] !== undefined) {
-            progressData[log.day] += 1;
-        }
+    userHistory.forEach(log => {
+        if (progressData[log.day] !== undefined) progressData[log.day] += 1;
     });
 
     Object.keys(progressData).forEach(day => {
         const count = progressData[day];
         const barElement = document.getElementById(`bar-${day}`);
         const countElement = document.getElementById(`count-${day}`);
-        
         if(barElement && countElement) {
             countElement.innerText = count;
-            const calculatedHeight = Math.min(count * 15, 60);
-            barElement.style.height = `${calculatedHeight}px`;
+            barElement.style.height = `${Math.min(count * 15, 60)}px`;
         }
     });
 }
 
 function filterAndSearchTasks() {
     const searchText = searchInput.value.toLowerCase();
-    const listItems = taskList.querySelectorAll('li');
-
-    listItems.forEach(li => {
+    taskList.querySelectorAll('li').forEach(li => {
         const taskText = li.querySelector('span').innerText.toLowerCase();
         const isCompleted = li.classList.contains('completed');
         const matchesSearch = taskText.includes(searchText);
-
-        let matchesFilter = false;
-        if (currentFilter === 'all') matchesFilter = true;
-        else if (currentFilter === 'completed' && isCompleted) matchesFilter = true;
-        else if (currentFilter === 'active' && !isCompleted) matchesFilter = true;
-
-        if (matchesSearch && matchesFilter) li.style.display = 'flex';
-        else li.style.display = 'none';
-    });
-}
-
-// LOCAL STORAGE HANDLERS
-function saveTaskToLocal(taskObj) {
-    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
-    tasks.push(taskObj);
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    
-    const now = new Date();
-    const todayStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-    localStorage.setItem('lastOpenedDate', todayStr);
-}
-
-function loadTasks() {
-    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
-    taskList.innerHTML = "";
-    tasks.forEach(taskObj => createTaskElement(taskObj));
-    filterAndSearchTasks();
-}
-
-function toggleTaskStatusInLocal(targetId, day) {
-    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
-    let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
-    
-    tasks = tasks.map(task => {
-        if (task.id === targetId) {
-            task.completed = !task.completed;
-            
-            if (task.completed) {
-                history.push({ id: targetId, day: day });
-            } else {
-                history = history.filter(log => log.id !== targetId);
-            }
-        }
-        return task;
-    });
-    
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    localStorage.setItem('completedHistory', JSON.stringify(history));
-    updateDashboardUI();
-    filterAndSearchTasks();
-}
-
-function removeTaskFromLocal(targetId) {
-    let tasks = localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')) : [];
-    tasks = tasks.filter(task => task.id !== targetId);
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    
-    let history = localStorage.getItem('completedHistory') ? JSON.parse(localStorage.getItem('completedHistory')) : [];
-    history = history.filter(log => log.id !== targetId);
-    localStorage.setItem('completedHistory', JSON.stringify(history));
-    
-    updateDashboardUI();
-}
-
-clearAllBtn.addEventListener('click', () => {
-    if (confirm("Are you sure you want to clear your current tasks list? (Your weekly analytics graph will remain saved! 📈)")) {
-        taskList.innerHTML = "";
-        localStorage.removeItem('tasks');
-        filterAndSearchTasks();
-    }
-});
-
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-theme');
-    if (document.body.classList.contains('dark-theme')) {
-        themeToggle.innerText = "☀️ Light Mode";
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        themeToggle.innerText = "🌙 Dark Mode";
-        localStorage.setItem('darkMode', 'disabled');
-    }
-});
-
-addBtn.addEventListener('click', addTask);
