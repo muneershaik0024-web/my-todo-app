@@ -115,7 +115,6 @@ function updateDashboardUI() {
     });
 }
 
-// Search and Filter Logics
 function filterAndSearchTasks() {
     const searchText = searchInput.value.toLowerCase();
     taskList.querySelectorAll('li').forEach(li => {
@@ -190,3 +189,8 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('darkMode', document.body.classList.contains('dark-theme') ? 'enabled' : 'disabled');
     themeToggle.innerText = document.body.classList.contains('dark-theme') ? "☀️ Light Mode" : "🌙 Dark Mode";
 });
+
+// LINK TRIGGER INITIALIZATION
+addBtn.addEventListener('click', addTask);
+taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+searchInput.addEventListener('input', filterAndSearchTasks);
