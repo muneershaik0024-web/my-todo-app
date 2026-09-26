@@ -1,8 +1,4 @@
-import { initializeApp } from "https://gstatic.com";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://gstatic.com";
-import { getFirestore, doc, setDoc, getDoc } from "https://gstatic.com";
-
-// 🔥 Your authenticated Firebase parameters from screenshot
+// 🔥 Firebase Global Instance Initialization
 const firebaseConfig = {
   apiKey: "AIzaSyBqCxS1nHfYDZyhVuqiU0ty9A6FonFFHhk",
   authDomain: "://firebaseapp.com",
@@ -12,11 +8,12 @@ const firebaseConfig = {
   appId: "1:166118917060:web:1cc6ae4b25d6d4baa95f83"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Initialize Firebase via compat standard
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// DOM pointers
+// DOM elements pointers
 const authContainer = document.getElementById('authContainer');
 const appContainer = document.getElementById('appContainer');
 const authEmail = document.getElementById('authEmail');
@@ -46,13 +43,14 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // AUTH WATCHER STATE MONITORING
-onAuthStateChanged(auth, async (user) => {
+auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
         authContainer.style.display = 'none';
         appContainer.style.display = 'block';
         userBadge.innerText = `👤 ${user.email.split('@')[0]}`;
         
+        authMessage.innerText = "";
         await syncFromCloud();
         checkAndSmartRolloverTasks();
         updateWeekDatesUI();
@@ -66,42 +64,50 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // SIGN UP ACTION
-signupBtn.addEventListener('click', async () => {
+signupBtn.addEventListener('click', function() {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
     if(!email || !password) {
+        authMessage.style.color = "red";
         authMessage.innerText = "Please enter both Email and Password.";
         return;
     }
-    try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        authMessage.style.color = "green";
-        authMessage.innerText = "Account Created Successfully! Signing in...";
-    } catch (err) {
-        authMessage.style.color = "red";
-        authMessage.innerText = err.message.replace("Firebase: ", "");
-    }
+    authMessage.style.color = "orange";
+    authMessage.innerText = "Creating account...";
+    
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+            authMessage.style.color = "green";
+            authMessage.innerText = "Account Created Successfully!";
+        })
+        .catch((err) => {
+            authMessage.style.color = "red";
+            authMessage.innerText = err.message;
+        });
 });
 
 // LOGIN ACTION
-loginBtn.addEventListener('click', async () => {
+loginBtn.addEventListener('click', function() {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
     if(!email || !password) {
+        authMessage.style.color = "red";
         authMessage.innerText = "Please enter both Email and Password.";
         return;
     }
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-        authMessage.style.color = "red";
-        authMessage.innerText = "Invalid credentials or user doesn't exist.";
-    }
+    authMessage.style.color = "orange";
+    authMessage.innerText = "Verifying...";
+    
+    auth.signInWithEmailAndPassword(email, password)
+        .catch((err) => {
+            authMessage.style.color = "red";
+            authMessage.innerText = "Invalid credentials or user doesn't exist.";
+        });
 });
 
 // LOGOUT ACTION
-logoutBtn.addEventListener('click', () => {
-    signOut(auth).then(() => {
+logoutBtn.addEventListener('click', function() {
+    auth.signOut().then(() => {
         userTasks = [];
         userHistory = [];
         authEmail.value = "";
@@ -112,22 +118,26 @@ logoutBtn.addEventListener('click', () => {
 
 async function syncToCloud() {
     if (!currentUser) return;
-    await setDoc(doc(db, "users", currentUser.uid), {
-        tasks: userTasks,
-        history: userHistory,
-        lastOpenedDate: localStorage.getItem('lastOpenedDate') || ""
-    });
+    try {
+        await db.collection("users").doc(currentUser.uid).set({
+            tasks: userTasks,
+            history: userHistory,
+            lastOpenedDate: localStorage.getItem('lastOpenedDate') || ""
+        });
+    } catch(e) { console.error(e); }
 }
 
 async function syncFromCloud() {
     if (!currentUser) return;
-    const docSnap = await getDoc(doc(db, "users", currentUser.uid));
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        userTasks = data.tasks || [];
-        userHistory = data.history || [];
-        if(data.lastOpenedDate) localStorage.setItem('lastOpenedDate', data.lastOpenedDate);
-    }
+    try {
+        const docSnap = await db.collection("users").doc(currentUser.uid).get();
+        if (docSnap.exists) {
+            const data = docSnap.data();
+            userTasks = data.tasks || [];
+            userHistory = data.history || [];
+            if(data.lastOpenedDate) localStorage.setItem('lastOpenedDate', data.lastOpenedDate);
+        }
+    } catch(e) { console.error(e); }
 }
 
 function checkAndSmartRolloverTasks() {

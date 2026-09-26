@@ -6,11 +6,16 @@
     <title>Advanced Productivity Tracker</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://w3.org' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📝</text></svg>">
+    
+    <!-- Core Firebase Compatibility Libraries App & Services -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
 </head>
 <body>
     <button id="themeToggle" class="theme-btn">🌙 Dark Mode</button>
 
-    <!-- 🔐 NEW: Firebase Login/Signup Auth Screen -->
+    <!-- 🔐 Firebase Login/Signup Auth Screen -->
     <div id="authContainer" class="todo-container" style="margin-bottom: 20px;">
         <h2 id="authTitle">🔐 Member Login</h2>
         <div class="input-section" style="flex-direction: column; gap: 12px;">
@@ -24,7 +29,7 @@
         <p id="authMessage" style="font-size: 12px; text-align: center; color: red; margin-top: 10px; font-weight: 500;"></p>
     </div>
 
-    <!-- 📊 Main App Container (Login hone tak hidden rahega) -->
+    <!-- 📊 Main App Container -->
     <div id="appContainer" class="todo-container" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <span id="userBadge" style="font-size: 11px; font-weight: bold; background: rgba(0,123,255,0.15); color:#007bff; padding:4px 8px; border-radius:20px;">👤 Guest</span>
@@ -68,7 +73,7 @@
         <button id="clearAllBtn" class="clear-btn">🧹 Clear All Tasks</button>
     </div>
 
-    <!-- Firebase System SDK Modules -->
-    <script type="module" src="script.js"></script>
+    <!-- Standard Normal Script Execution -->
+    <script src="script.js"></script>
 </body>
 </html>
