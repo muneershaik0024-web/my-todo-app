@@ -13,7 +13,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// DOM elements pointers
+// UI Elements Pointers
 const authContainer = document.getElementById('authContainer');
 const appContainer = document.getElementById('appContainer');
 const authEmail = document.getElementById('authEmail');
@@ -49,7 +49,6 @@ auth.onAuthStateChanged(async (user) => {
         authContainer.style.display = 'none';
         appContainer.style.display = 'block';
         userBadge.innerText = `👤 ${user.email.split('@')[0]}`;
-        
         authMessage.innerText = "";
         await syncFromCloud();
         checkAndSmartRolloverTasks();
@@ -74,7 +73,6 @@ signupBtn.addEventListener('click', function() {
     }
     authMessage.style.color = "orange";
     authMessage.innerText = "Creating account...";
-    
     auth.createUserWithEmailAndPassword(email, password)
         .then(() => {
             authMessage.style.color = "green";
@@ -97,7 +95,6 @@ loginBtn.addEventListener('click', function() {
     }
     authMessage.style.color = "orange";
     authMessage.innerText = "Verifying...";
-    
     auth.signInWithEmailAndPassword(email, password)
         .catch((err) => {
             authMessage.style.color = "red";
@@ -155,7 +152,6 @@ function checkAndSmartRolloverTasks() {
     if (lastOpenedDate !== todayStr) {
         const timeStr = `${now.getDate()} ${months[now.getMonth()]} at ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         const dayCreated = daysOfWeek[now.getDay()];
-
         const routineTasksToKeep = userTasks.filter(task => task.isRoutine === true);
         userTasks = routineTasksToKeep.map(oldTask => ({
             id: (Date.now() + Math.random()).toString(),
@@ -165,7 +161,6 @@ function checkAndSmartRolloverTasks() {
             day: dayCreated,
             isRoutine: true
         }));
-
         localStorage.setItem('lastOpenedDate', todayStr);
         syncToCloud();
     }
@@ -207,7 +202,6 @@ function addTask() {
     userTasks.push(taskObj);
     taskInput.value = "";
     routineCheckbox.checked = false;
-    
     renderTasksUI();
     syncToCloud();
 }
@@ -251,7 +245,6 @@ function renderTasksUI() {
             updateDashboardUI();
             syncToCloud();
         };
-
         li.appendChild(deleteBtn);
         taskList.appendChild(li);
     });
@@ -280,3 +273,5 @@ function filterAndSearchTasks() {
     taskList.querySelectorAll('li').forEach(li => {
         const taskText = li.querySelector('span').innerText.toLowerCase();
         const isCompleted = li.classList.contains('completed');
+        const matchesSearch = taskText.includes(searchText);
+let matchesFilter = currentFilter === 'all' || (currentFilter === 'completed' && isCompleted) || (currentFilter === 'active' && !isCompleted);li.style.display = (matchesSearch && matchesFilter) ? 'flex' : 'none';});}// 7. LISTENERS SETUP BOUND REGIONaddBtn.addEventListener('click', addTask);taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });searchInput.addEventListener('input', filterAndSearchTasks);clearAllBtn.addEventListener('click', () => {if (confirm("Clear current task list from cloud server?")) {userTasks = [];renderTasksUI();syncToCloud();}});filterButtons.forEach(btn => {btn.addEventListener('click', (e) => {document.querySelector('.filter-btn.active').classList.remove('active');e.target.classList.add('active');currentFilter = e.target.getAttribute('data-filter');filterAndSearchTasks();});});themeToggle.addEventListener('click', () => {document.body.classList.toggle('dark-theme');localStorage.setItem('darkMode', document.body.classList.contains('dark-theme') ? 'enabled' : 'disabled');});if (localStorage.getItem('darkMode') === 'enabled') {document.body.classList.add('dark-theme');themeToggle.innerText = "☀️ Light Mode";}
