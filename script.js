@@ -1,4 +1,4 @@
-// 🔥 Firebase Global Instance Initialization
+// 🔥 Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBqCxS1nHfYDZyhVuqiU0ty9A6FonFFHhk",
   authDomain: "://firebaseapp.com",
@@ -8,7 +8,7 @@ const firebaseConfig = {
   appId: "1:166118917060:web:1cc6ae4b25d6d4baa95f83"
 };
 
-// Initialize Firebase via compat standard
+// Initialize Firebase via compat method
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -42,7 +42,7 @@ const dashboardDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// AUTH WATCHER STATE MONITORING
+// 1. AUTH WATCHER STATE MONITORING
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
@@ -63,7 +63,7 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// SIGN UP ACTION
+// 2. SIGN UP ACTION
 signupBtn.addEventListener('click', function() {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
@@ -86,7 +86,7 @@ signupBtn.addEventListener('click', function() {
         });
 });
 
-// LOGIN ACTION
+// 3. LOGIN ACTION
 loginBtn.addEventListener('click', function() {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
@@ -105,7 +105,7 @@ loginBtn.addEventListener('click', function() {
         });
 });
 
-// LOGOUT ACTION
+// 4. LOGOUT ACTION
 logoutBtn.addEventListener('click', function() {
     auth.signOut().then(() => {
         userTasks = [];
@@ -116,6 +116,7 @@ logoutBtn.addEventListener('click', function() {
     });
 });
 
+// 5. CLOUD BACKEND DATA SYNC LOGICS
 async function syncToCloud() {
     if (!currentUser) return;
     try {
@@ -140,6 +141,7 @@ async function syncFromCloud() {
     } catch(e) { console.error(e); }
 }
 
+// 6. TASK ACTION MANAGEMENT
 function checkAndSmartRolloverTasks() {
     const now = new Date();
     const todayStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
@@ -278,4 +280,3 @@ function filterAndSearchTasks() {
     taskList.querySelectorAll('li').forEach(li => {
         const taskText = li.querySelector('span').innerText.toLowerCase();
         const isCompleted = li.classList.contains('completed');
-        const matchesSearch = taskText.includes(searchText);
